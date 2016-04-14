@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PaulLanguage", "PaulLanguage.vcxproj", "{0E2AB3DD-33AC-4B64-B57A-C4C91DF96F0B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{304DC288-7CE8-416C-9C4C-7C2F637F1A6E} = {304DC288-7CE8-416C-9C4C-7C2F637F1A6E}
+		{E178D0DF-B6B1-4570-97BA-5D06BD35D420} = {E178D0DF-B6B1-4570-97BA-5D06BD35D420}
+		{08940EE5-B914-4C6B-B7DF-14C9738F69CB} = {08940EE5-B914-4C6B-B7DF-14C9738F69CB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Expression", "Expression\Expression.vcxproj", "{E178D0DF-B6B1-4570-97BA-5D06BD35D420}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ruled", "Ruled\Ruled.vcxproj", "{08940EE5-B914-4C6B-B7DF-14C9738F69CB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Parser", "Parser\Parser.vcxproj", "{304DC288-7CE8-416C-9C4C-7C2F637F1A6E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E2AB3DD-33AC-4B64-B57A-C4C91DF96F0B}.Debug|x64.ActiveCfg = Debug|x64
+		{0E2AB3DD-33AC-4B64-B57A-C4C91DF96F0B}.Debug|x64.Build.0 = Debug|x64
+		{0E2AB3DD-33AC-4B64-B57A-C4C91DF96F0B}.Release|x64.ActiveCfg = Debug|x64
+		{0E2AB3DD-33AC-4B64-B57A-C4C91DF96F0B}.Release|x64.Build.0 = Debug|x64
+		{E178D0DF-B6B1-4570-97BA-5D06BD35D420}.Debug|x64.ActiveCfg = Debug|x64
+		{E178D0DF-B6B1-4570-97BA-5D06BD35D420}.Debug|x64.Build.0 = Debug|x64
+		{E178D0DF-B6B1-4570-97BA-5D06BD35D420}.Release|x64.ActiveCfg = Debug|x64
+		{E178D0DF-B6B1-4570-97BA-5D06BD35D420}.Release|x64.Build.0 = Debug|x64
+		{08940EE5-B914-4C6B-B7DF-14C9738F69CB}.Debug|x64.ActiveCfg = Debug|x64
+		{08940EE5-B914-4C6B-B7DF-14C9738F69CB}.Debug|x64.Build.0 = Debug|x64
+		{08940EE5-B914-4C6B-B7DF-14C9738F69CB}.Release|x64.ActiveCfg = Debug|x64
+		{08940EE5-B914-4C6B-B7DF-14C9738F69CB}.Release|x64.Build.0 = Debug|x64
+		{304DC288-7CE8-416C-9C4C-7C2F637F1A6E}.Debug|x64.ActiveCfg = Debug|x64
+		{304DC288-7CE8-416C-9C4C-7C2F637F1A6E}.Debug|x64.Build.0 = Debug|x64
+		{304DC288-7CE8-416C-9C4C-7C2F637F1A6E}.Release|x64.ActiveCfg = Release|x64
+		{304DC288-7CE8-416C-9C4C-7C2F637F1A6E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
