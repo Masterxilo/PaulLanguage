@@ -1,6 +1,58 @@
 #pragma once
-#include <Windows.h>
-// API
+
+#include <vector>
+#include <string>
+
+/*++
+
+Module Name:
+
+    Expression.h
+
+Abstract:
+
+    * Defines the data structure Expression which shall be treated as if defined as follows:
+
+        struct Expression {
+            std::string symbol;
+            std::vector<Expression*> subexpressions;
+        };
+
+        It stores a sequence of bytes and valid pointers to other Expressions.
+    
+    * Enforces some the constraints mentioned below and can check some. However, it is the users responsibility to ensure their validity is maintained.
+    * Allocates and deeply deallocates such expressions.
+    
+    An Expression:
+    * May not be allocated through means other than allocate(). Specifically, it cannot be:
+        * copied (shallowly)
+        * allocated on the stack
+    * The set of all Expressions existing in the system at any given time is always a DAG, directed acyclic graph.
+
+    Failure to ensure any of these constraints may cause a fatal failure at the time the structure is invalidated and may result in undefined behaviour of functions accepting such a PExpression (directly or indirectly). 
+
+Dependencies:
+
+    none
+
+Memory management:
+
+    Manages memory for all valid PExpressions currently existing.
+    Does not free the memory when unloaded.
+
+Thread safety:
+
+    The functions are not synchronized.
+
+    The user is responsible for ensuring Expressions are not freed multiple times from different threads and the user has to avoid data-races.
+
+Error handling:
+
+    An assertion fails on invalid input.
+    No exceptions are thrown.
+
+--*/
+
 #ifdef EXPRESSION_DLL_COMPILE
 #define API __declspec(dllexport)
 #else
@@ -8,88 +60,44 @@
 #pragma comment(lib, "Expression.lib")
 #endif
 
-/**
-Memory management:
-Any expression allocated via allocate must be (indirectly)
-deallocated with deallocate.
-
-allocate allocates space for pointers but does not initialize them to anything but 0x0.
-
-All expressions in existence at any point in time must form a directed acyclic graph. It is an error for subexpressions to refer to the same expression.
-*/
-/*
-In case you don't want to use the dll's .lib
-struct ExpressionDll {
-
-}
-void dynamicLoad() {
-HMODULE h = LoadLibraryA("Expression.dll");
-assert(h != NULL);
-assert(GetProcAddress(h, "persist"));
-}
-*/
 struct Expression;
 typedef Expression* PExpression;
-extern "C" {
-    API void persist(HANDLE hFile, PExpression);
-    API PExpression load(HANDLE hFile);
-    API PExpression allocate(unsigned int symbol_len, unsigned int subexpression_count);
 
-    // Recursive i.e. deep delete
-    API void deallocate(PExpression);
 
-    API unsigned int countAllocated();
-    API void validate(PExpression);
+/// Recursive i.e. deep delete.
+/// No-op on 0, ignores subexpression[i] == 0.
+/// Thus, deallocate(allocate(0,0)) is allowed.
+API void deallocate(PExpression);
+
+
+#include <memory>
+#include <iostream>
+#include <functional>
+// Wrap and call deallocate as the pointer goes out of scope
+typedef std::unique_ptr<Expression, std::function<void(PExpression)>> SPExpression;
+
+inline void deallocateExpression(PExpression p) {
+    //std::cout << "unique_ptr deallocating " << p << std::endl; 
+    deallocate(p);
 };
+inline SPExpression scope(PExpression e) {
+    return SPExpression(e, deallocateExpression);
+}
 
-#include <vector>
+API SPExpression allocate();
 
-#include "assert.h"
-static const unsigned int INVALID_LENGTH = -1;
-
-// ABI
-// Lengths and counts are 0 iff the corresponding pointers are 0.
-struct Expression {
+class Expression {
 private:
-    unsigned int _symbol_len;
-    char* _symbol;
+    void operator=(Expression);
+    Expression() {}
+    Expression(Expression&);
+    ~Expression() {}
 
-    //unsigned int _subexpression_count;
-    //Expression** _subexpressions;
-    // easier debuggability: TODO is this good enough? why malloc if we dont have to
-    // but it gives an STL dependency, and possible non-binary compat
-    std::vector<Expression*> _subexpressions;
-
-    // Control who gets to modify the attributes
-    // Note that you may modify the stuff pointed to, just not the memory used.
-    friend PExpression allocate(unsigned int symbol_len, unsigned int subexpression_count);
+    friend SPExpression allocate();
     friend void deallocate(PExpression);
-    friend void validate(PExpression);
 public:
-#define readOnly(prop) decltype(_##prop) get_##prop() {return _##prop;}\
-    __declspec(property(get = get_##prop)) decltype(_##prop) prop;
-
-    readOnly(symbol_len);
-    readOnly(symbol);
-    
-    unsigned int get_subexpression_count() {
-        return _symbol_len == INVALID_LENGTH ? INVALID_LENGTH : _subexpressions.size();
-    }
-    __declspec(property(get = get_subexpression_count)) unsigned int subexpression_count;
-    //Expression** // <- returning vector gives proper "subscript out of range" and is syntactically compatible
-    std::vector<Expression*>& get_subexpressions() {
-        assert(_symbol_len != INVALID_LENGTH);
-        return //get_subexpression_count() == 0 ? 0 : 
-            _subexpressions; // .data();
-    }
-    __declspec(property(get = get_subexpressions)) std::vector<Expression*>& subexpressions;
-    
-    // Warning know what you're doing
-    void forget_subexpressions() {
-        //_subexpression_count = 0;
-        //_subexpressions = 0;
-        _subexpressions.clear();
-    }
+    std::string symbol;
+    std::vector<SPExpression> subexpressions;
 };
 
-
+#undef API

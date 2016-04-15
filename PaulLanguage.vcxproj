@@ -25,7 +25,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>.;Ruled;Parser;Expression;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>Persist;.;Ruled;Parser;$(SolutionDir).\Expression;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExpressionExt.h" />
+    <ClInclude Include="FilePersist.h" />
+    <ClInclude Include="TransformationLibrary.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

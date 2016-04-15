@@ -1,93 +1,102 @@
 #include "Parser.h"
-#include "ExpressionExt.h"
 #include "assert.h"
-#include <Windows.h>
-#include <stdio.h>
-#include <string>
-#include <memory>
-#include <iostream>
+#include <ctype.h>
 using namespace std;
 
-#include <functional>
-#include <string>
-#include <vector>
-using namespace std;
-void skipspace(char *&s) { while (*s && isspace(*s))s++; }
 
+// [symbol] (toString ... toString )
 string toString(PExpression e) {
-    string s = getSymbol(e);
-    assert(s.length() == e->symbol_len);
-    if (!e->subexpression_count) return s;
+    string s = e->symbol;
 
     s += "(";
-    const int n = e->subexpression_count;
-    assert(n < 10 * 1000);
-    eachSubexpressionIndexed(e, [&](PExpression& x, const int i) {
-        s += toString(x);
-        if (i < n - 1) s += " ";
-    });
+    for (auto& x : e->subexpressions) {
+        s += toString(x.get()) + " ";
+    }
     s += ")";
     return s;
 }
 
-void eachSubexpressionIndexed_(PExpression e, function<void(PExpression&, const int)> f) {
-
-}
-
-void doit() {
-    eachSubexpressionIndexed_(0, [&](PExpression& se, const int) {
-    });
-}
-
-
+void skipspace(char *&s) { while (*s && isspace(*s))s++; }
 // Consumes initial and final space and
-// [symbol]
-// [symbol]    (<fromString> ... <fromString>)
+// [symbol] (<fromString> ... <fromString>)
 // s must point to 0 or a 0-terminated string.
-PExpression fromString(char*& s) {
+SPExpression fromString(char*& s) {
     assert(*s);
-    string symbol = "";
-    vector<PExpression> subexpressions;
+    SPExpression e = allocate();
 
     skipspace(s);
     while (*s && !isspace(*s) && *s != '(' && *s != ')') {
-        symbol += *s;
+        e->symbol += *s;
         s++;
     }
     skipspace(s);
 
-    if (*s == '(') {
-        s++;
-        assert(*s);
-        skipspace(s);
-        assert(*s);
-        while (*s && *s != ')') {
-            auto e = fromString(s);
-            subexpressions.push_back(e);
-        }
-        if (*s == ')') s++;
+    Tassert(*s == '(', "expected '(' found '%c'", *s == 0 ? '0' : *s);
+    s++;
+    Tassert(*s);
+    skipspace(s);
+    Tassert(*s);
+
+    while (*s && *s != ')') {
+        e->subexpressions.push_back(fromString(s));
     }
+
+    Tassert(*s == ')');
+    s++;
 
     skipspace(s);
 
-    return makeExpression(symbol, subexpressions);
+    return e;
 }
 
-extern "C" {
-    PExpression stringify(PExpression e) {
-        auto o = makeExpression(toString(e));
-        deallocate(e);
-        return o;
-    }
-    PExpression parse(PExpression symbol) {
-        assert(symbol->subexpression_count == 0);
+// Consumes initial and final space and
+// [symbol] // with space afterwards
+// [symbol](<fromString> ... <fromString>) // no space before brace
+// s must point to 0 or a 0-terminated string.
+// Superset of strict parsing
+SPExpression fromStringLax(char*& s) {
+    SPExpression e = allocate();
+    Tassert(*s);
 
-        string str = getSymbol(symbol);
-        char* s = (char*)str.c_str();
-        assert(*(s + symbol->symbol_len) == 0, "s must be zero terminated");
-        auto o = fromString(s);
-
-        deallocate(symbol);
-        return o;
+    skipspace(s);
+    while (*s && !isspace(*s) && *s != '(' && *s != ')') {
+        e->symbol += *s;
+        s++;
     }
+    bool brace = false;
+    if (*s == '(') {
+        brace = true;
+        s++;
+        Tassert(*s);
+        skipspace(s);
+        Tassert(*s);
+
+        while (*s && *s != ')') {
+            e->subexpressions.push_back(fromStringLax(s));
+        }
+
+        Tassert(*s == ')', "expected ')' found '%c' (missing closing braces)", *s == 0 ? '0' : *s);
+        s++;
+    }
+    assert(brace || e->subexpressions.size() == 0);
+    skipspace(s);
+    return e;
+}
+
+DEF_TRANSFORMATION(stringify) {
+    return makeExpression(toString(e.get()));
+}
+
+DEF_TRANSFORMATION(parse) {
+    Tassert(e->subexpressions.empty());
+
+    char* s = (char*)e->symbol.c_str();
+    return fromString(s);
+}
+
+DEF_TRANSFORMATION(parseLax) {
+    Tassert(e->subexpressions.empty());
+
+    char* s = (char*)e->symbol.c_str();
+    return fromStringLax(s);
 }
